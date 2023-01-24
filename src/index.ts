@@ -14,16 +14,16 @@ interface Parent extends Node {
 
 interface Visitor {
   enter?: {
-    condition?: (node: Node, parent: any) => boolean
-    handle: (node: Node, parent: any) => void
+    condition?: (node: Node, parent: Parent) => boolean
+    handle: (node: Node, parent: Parent) => void
   }
   exit?: {
-    condition?: (node: Node, parent: any) => boolean
-    handle: (node: Node, parent: any) => void
+    condition?: (node: Node, parent: Parent) => boolean
+    handle: (node: Node, parent: Parent) => void
   }
 }
 
-function handleVisitors(visitors: Visitor[], type: 'enter' | 'exit', node: Node, parent: Parent | null) {
+function handleVisitors(visitors: Visitor[], type: 'enter' | 'exit', node: Node, parent: Parent) {
   visitors.forEach((visitor) => {
     const target = visitor[type]
     if (target) {
@@ -34,7 +34,15 @@ function handleVisitors(visitors: Visitor[], type: 'enter' | 'exit', node: Node,
   })
 }
 
-export function traverser(json: Record<string, any>, visitors: Visitor[], __parent: Parent | null = null) {
+export function traverser(json: Record<string, any>, visitors: Visitor[], __parent?: Parent) {
+  if (!__parent) {
+    __parent = {
+      value: json,
+      key: '',
+      type: 'object',
+      __parent: null,
+    }
+  }
   for (const key in json) {
     const value = json[key]
     let type = typeof value as DataType
