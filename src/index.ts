@@ -23,13 +23,14 @@ interface Visitor {
   }
 }
 
-function handleVisitors(visitors: Visitor[], type: 'enter' | 'exit', node: Node, parent: Parent) {
+function handleVisitors(visitors: Visitor[], type: 'enter' | 'exit', json: Record<string, any>, node: Node, parent: Parent) {
   visitors.forEach((visitor) => {
     const target = visitor[type]
     if (target) {
       const { condition, handle } = target
-      if (!condition || condition(node, parent))
-        handle(node, parent)
+      const newNode = { ...node, value: json[node.key] }
+      if (!condition || condition(newNode, parent))
+        handle(newNode, parent)
     }
   })
 }
@@ -53,12 +54,12 @@ export function traverser(json: Record<string, any>, visitors: Visitor[], __pare
         type,
         __parent,
       }
-      handleVisitors(visitors, 'enter', { type, key, value }, __parent)
+      handleVisitors(visitors, 'enter', json, { type, key, value }, __parent)
       traverser(value, visitors, parent)
     }
     else if (isArray(value)) {
       type = 'array'
-      handleVisitors(visitors, 'enter', { type, key, value }, __parent)
+      handleVisitors(visitors, 'enter', json, { type, key, value }, __parent)
       const parent: Parent = {
         key,
         value,
@@ -70,9 +71,11 @@ export function traverser(json: Record<string, any>, visitors: Visitor[], __pare
       })
     }
     else {
-      handleVisitors(visitors, 'enter', { type, key, value }, __parent)
+      handleVisitors(visitors, 'enter', json, { type, key, value }, __parent)
     }
 
-    handleVisitors(visitors, 'exit', { type, key, value }, __parent)
+    const valueNew = json[key]
+    const typeNew = typeof value as DataType
+    handleVisitors(visitors, 'exit', json, { type: typeNew, key, value: valueNew }, __parent)
   }
 }
