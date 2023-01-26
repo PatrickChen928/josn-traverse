@@ -8,7 +8,7 @@ describe('traverser', () => {
     data.forEach((d) => {
       traverser(d, [
         {
-          exit: {
+          enter: {
             condition: (node) => {
               return node.type === 'string' && /^[^a-zA-Z0-9\u4E00-\u9FA5]+$/.test(node.value)
             },
@@ -20,7 +20,7 @@ describe('traverser', () => {
         {
           enter: {
             condition: (node) => {
-              return node.type === 'string' && (node.value.includes('（') || node.value.includes('）'))
+              return node.type === 'string' && node.value && (node.value.includes('（') || node.value.includes('）'))
             },
             handle: (node, parent) => {
               parent.value[node.key] = node.value.replaceAll('（', '(').replaceAll('）', ')')
@@ -30,7 +30,7 @@ describe('traverser', () => {
         {
           enter: {
             condition: (node) => {
-              return node.type === 'string'
+              return node.type === 'string' && node.value
             },
             handle: (node, parent) => {
               parent.value[node.key] = node.value.trim()
